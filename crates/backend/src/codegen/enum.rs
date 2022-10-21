@@ -37,33 +37,33 @@ impl NapiEnum {
     });
 
     quote! {
-      impl awl::napi::bindgen_prelude::TypeName for #name {
+      impl awl::ms::napi::bindgen_prelude::TypeName for #name {
         fn type_name() -> &'static str {
           #name_str
         }
 
-        fn value_type() -> awl::napi::ValueType {
-          awl::napi::ValueType::Object
+        fn value_type() -> awl::ms::napi::ValueType {
+          awl::ms::napi::ValueType::Object
         }
       }
 
-      impl awl::napi::bindgen_prelude::ValidateNapiValue for #name {
+      impl awl::ms::napi::bindgen_prelude::ValidateNapiValue for #name {
         unsafe fn validate(
-          env: awl::napi::bindgen_prelude::sys::napi_env,
-          napi_val: awl::napi::bindgen_prelude::sys::napi_value
-        ) -> awl::napi::bindgen_prelude::Result<awl::napi::sys::napi_value> {
-          awl::napi::bindgen_prelude::assert_type_of!(env, napi_val, awl::napi::bindgen_prelude::ValueType::Number)?;
+          env: awl::ms::napi::bindgen_prelude::sys::napi_env,
+          napi_val: awl::ms::napi::bindgen_prelude::sys::napi_value
+        ) -> awl::ms::napi::bindgen_prelude::Result<awl::ms::napi::sys::napi_value> {
+          awl::ms::napi::bindgen_prelude::assert_type_of!(env, napi_val, awl::ms::napi::bindgen_prelude::ValueType::Number)?;
           Ok(std::ptr::null_mut())
         }
       }
 
-      impl awl::napi::bindgen_prelude::FromNapiValue for #name {
+      impl awl::ms::napi::bindgen_prelude::FromNapiValue for #name {
         unsafe fn from_napi_value(
-          env: awl::napi::bindgen_prelude::sys::napi_env,
-          napi_val: awl::napi::bindgen_prelude::sys::napi_value
-        ) -> awl::napi::bindgen_prelude::Result<Self> {
+          env: awl::ms::napi::bindgen_prelude::sys::napi_env,
+          napi_val: awl::ms::napi::bindgen_prelude::sys::napi_value
+        ) -> awl::ms::napi::bindgen_prelude::Result<Self> {
           let val = i32::from_napi_value(env, napi_val).map_err(|e| {
-            awl::napi::bindgen_prelude::error!(
+            awl::ms::napi::bindgen_prelude::error!(
               e.status,
               "Failed to convert napi value into enum `{}`. {}",
               #name_str,
@@ -74,8 +74,8 @@ impl NapiEnum {
           match val {
             #(#from_napi_branches,)*
             _ => {
-              Err(awl::napi::bindgen_prelude::error!(
-                awl::napi::bindgen_prelude::Status::InvalidArg,
+              Err(awl::ms::napi::bindgen_prelude::error!(
+                awl::ms::napi::bindgen_prelude::Status::InvalidArg,
                 "value `{}` does not match any variant of enum `{}`",
                 val,
                 #name_str
@@ -85,11 +85,11 @@ impl NapiEnum {
         }
       }
 
-      impl awl::napi::bindgen_prelude::ToNapiValue for #name {
+      impl awl::ms::napi::bindgen_prelude::ToNapiValue for #name {
         unsafe fn to_napi_value(
-          env: awl::napi::bindgen_prelude::sys::napi_env,
+          env: awl::ms::napi::bindgen_prelude::sys::napi_env,
           val: Self
-        ) -> awl::napi::bindgen_prelude::Result<awl::napi::bindgen_prelude::sys::napi_value> {
+        ) -> awl::ms::napi::bindgen_prelude::Result<awl::ms::napi::bindgen_prelude::sys::napi_value> {
           let val = match val {
             #(#to_napi_branches,)*
           };
@@ -114,8 +114,8 @@ impl NapiEnum {
       define_properties.push(quote! {
         {
           let name = std::ffi::CStr::from_bytes_with_nul_unchecked(#name_lit.as_bytes());
-          awl::napi::bindgen_prelude::check_status!(
-            awl::napi::bindgen_prelude::sys::napi_set_named_property(env, obj_ptr, name.as_ptr(), i32::to_napi_value(env, #val_lit)?),
+          awl::ms::napi::bindgen_prelude::check_status!(
+            awl::ms::napi::bindgen_prelude::sys::napi_set_named_property(env, obj_ptr, name.as_ptr(), i32::to_napi_value(env, #val_lit)?),
             "Failed to defined enum `{}`",
             #js_name_lit
           )?;
@@ -133,14 +133,14 @@ impl NapiEnum {
     quote! {
       #[allow(non_snake_case)]
       #[allow(clippy::all)]
-      unsafe fn #callback_name(env: awl::napi::bindgen_prelude::sys::napi_env) -> awl::napi::bindgen_prelude::Result<awl::napi::bindgen_prelude::sys::napi_value> {
+      unsafe fn #callback_name(env: awl::ms::napi::bindgen_prelude::sys::napi_env) -> awl::ms::napi::bindgen_prelude::Result<awl::ms::napi::bindgen_prelude::sys::napi_value> {
         use std::ffi::CString;
         use std::ptr;
 
         let mut obj_ptr = ptr::null_mut();
 
-        awl::napi::bindgen_prelude::check_status!(
-          awl::napi::bindgen_prelude::sys::napi_create_object(env, &mut obj_ptr),
+        awl::ms::napi::bindgen_prelude::check_status!(
+          awl::ms::napi::bindgen_prelude::sys::napi_create_object(env, &mut obj_ptr),
           "Failed to create napi object"
         )?;
 
@@ -151,9 +151,9 @@ impl NapiEnum {
       #[allow(non_snake_case)]
       #[allow(clippy::all)]
       #[cfg(all(not(test), not(feature = "noop")))]
-      #[awl::napi::bindgen_prelude::ctor]
+      #[awl::ms::napi::bindgen_prelude::ctor]
       fn #register_name() {
-        awl::napi::bindgen_prelude::register_module_export(#js_mod_ident, #js_name_lit, #callback_name);
+        awl::ms::napi::bindgen_prelude::register_module_export(#js_mod_ident, #js_name_lit, #callback_name);
       }
     }
   }

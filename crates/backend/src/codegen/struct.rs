@@ -29,78 +29,78 @@ fn gen_napi_value_map_impl(name: &Ident, to_napi_val_impl: TokenStream) -> Token
   let name_str = name.to_string();
   let js_name_str = format!("{}\0", name_str);
   let validate = quote! {
-    unsafe fn validate(env: awl::napi::sys::napi_env, napi_val: awl::napi::sys::napi_value) -> awl::napi::Result<awl::napi::sys::napi_value> {
-      if let Some(ctor_ref) = awl::napi::bindgen_prelude::get_class_constructor(#js_name_str) {
+    unsafe fn validate(env: awl::ms::napi::sys::napi_env, napi_val: awl::ms::napi::sys::napi_value) -> awl::ms::napi::Result<awl::ms::napi::sys::napi_value> {
+      if let Some(ctor_ref) = awl::ms::napi::bindgen_prelude::get_class_constructor(#js_name_str) {
         let mut ctor = std::ptr::null_mut();
-        awl::napi::check_status!(
-          awl::napi::sys::napi_get_reference_value(env, ctor_ref, &mut ctor),
+        awl::ms::napi::check_status!(
+          awl::ms::napi::sys::napi_get_reference_value(env, ctor_ref, &mut ctor),
           "Failed to get constructor reference of class `{}`",
           #name_str
         )?;
         let mut is_instance_of = false;
-        awl::napi::check_status!(
-          awl::napi::sys::napi_instanceof(env, napi_val, ctor, &mut is_instance_of),
+        awl::ms::napi::check_status!(
+          awl::ms::napi::sys::napi_instanceof(env, napi_val, ctor, &mut is_instance_of),
           "Failed to get external value of class `{}`",
           #name_str
         )?;
         if is_instance_of {
           Ok(std::ptr::null_mut())
         } else {
-          Err(awl::napi::Error::new(
-            awl::napi::Status::InvalidArg,
+          Err(awl::ms::napi::Error::new(
+            awl::ms::napi::Status::InvalidArg,
             format!("Value is not instanceof class `{}`", #name_str)
           ))
         }
       } else {
-        Err(awl::napi::Error::new(
-          awl::napi::Status::InvalidArg,
+        Err(awl::ms::napi::Error::new(
+          awl::ms::napi::Status::InvalidArg,
           format!("Failed to get constructor of class `{}`", #name_str)
         ))
       }
     }
   };
   quote! {
-    impl awl::napi::bindgen_prelude::TypeName for #name {
+    impl awl::ms::napi::bindgen_prelude::TypeName for #name {
       fn type_name() -> &'static str {
         #name_str
       }
 
-      fn value_type() -> awl::napi::ValueType {
-        awl::napi::ValueType::Function
+      fn value_type() -> awl::ms::napi::ValueType {
+        awl::ms::napi::ValueType::Function
       }
     }
 
-    impl awl::napi::bindgen_prelude::TypeName for &#name {
+    impl awl::ms::napi::bindgen_prelude::TypeName for &#name {
       fn type_name() -> &'static str {
         #name_str
       }
 
-      fn value_type() -> awl::napi::ValueType {
-        awl::napi::ValueType::Object
+      fn value_type() -> awl::ms::napi::ValueType {
+        awl::ms::napi::ValueType::Object
       }
     }
 
-    impl awl::napi::bindgen_prelude::TypeName for &mut #name {
+    impl awl::ms::napi::bindgen_prelude::TypeName for &mut #name {
       fn type_name() -> &'static str {
         #name_str
       }
 
-      fn value_type() -> awl::napi::ValueType {
-        awl::napi::ValueType::Object
+      fn value_type() -> awl::ms::napi::ValueType {
+        awl::ms::napi::ValueType::Object
       }
     }
 
     #to_napi_val_impl
 
-    impl awl::napi::bindgen_prelude::FromNapiRef for #name {
+    impl awl::ms::napi::bindgen_prelude::FromNapiRef for #name {
       unsafe fn from_napi_ref(
-        env: awl::napi::bindgen_prelude::sys::napi_env,
-        napi_val: awl::napi::bindgen_prelude::sys::napi_value
-      ) -> awl::napi::bindgen_prelude::Result<&'static Self> {
+        env: awl::ms::napi::bindgen_prelude::sys::napi_env,
+        napi_val: awl::ms::napi::bindgen_prelude::sys::napi_value
+      ) -> awl::ms::napi::bindgen_prelude::Result<&'static Self> {
         let mut wrapped_val: *mut std::ffi::c_void = std::ptr::null_mut();
 
-        awl::napi::bindgen_prelude::check_status!(
-          awl::napi::bindgen_prelude::sys::napi_unwrap(env, napi_val, &mut wrapped_val),
+        awl::ms::napi::bindgen_prelude::check_status!(
+          awl::ms::napi::bindgen_prelude::sys::napi_unwrap(env, napi_val, &mut wrapped_val),
           "Failed to recover `{}` type from napi value",
           #name_str,
         )?;
@@ -109,15 +109,15 @@ fn gen_napi_value_map_impl(name: &Ident, to_napi_val_impl: TokenStream) -> Token
       }
     }
 
-    impl awl::napi::bindgen_prelude::FromNapiMutRef for #name {
+    impl awl::ms::napi::bindgen_prelude::FromNapiMutRef for #name {
       unsafe fn from_napi_mut_ref(
-        env: awl::napi::bindgen_prelude::sys::napi_env,
-        napi_val: awl::napi::bindgen_prelude::sys::napi_value
-      ) -> awl::napi::bindgen_prelude::Result<&'static mut Self> {
+        env: awl::ms::napi::bindgen_prelude::sys::napi_env,
+        napi_val: awl::ms::napi::bindgen_prelude::sys::napi_value
+      ) -> awl::ms::napi::bindgen_prelude::Result<&'static mut Self> {
         let mut wrapped_val: *mut std::ffi::c_void = std::ptr::null_mut();
 
-        awl::napi::bindgen_prelude::check_status!(
-          awl::napi::bindgen_prelude::sys::napi_unwrap(env, napi_val, &mut wrapped_val),
+        awl::ms::napi::bindgen_prelude::check_status!(
+          awl::ms::napi::bindgen_prelude::sys::napi_unwrap(env, napi_val, &mut wrapped_val),
           "Failed to recover `{}` type from napi value",
           #name_str,
         )?;
@@ -126,40 +126,40 @@ fn gen_napi_value_map_impl(name: &Ident, to_napi_val_impl: TokenStream) -> Token
       }
     }
 
-    impl awl::napi::bindgen_prelude::FromNapiValue for &#name {
+    impl awl::ms::napi::bindgen_prelude::FromNapiValue for &#name {
       unsafe fn from_napi_value(
-        env: awl::napi::bindgen_prelude::sys::napi_env,
-        napi_val: awl::napi::bindgen_prelude::sys::napi_value
-      ) -> awl::napi::bindgen_prelude::Result<Self> {
-        awl::napi::bindgen_prelude::FromNapiRef::from_napi_ref(env, napi_val)
+        env: awl::ms::napi::bindgen_prelude::sys::napi_env,
+        napi_val: awl::ms::napi::bindgen_prelude::sys::napi_value
+      ) -> awl::ms::napi::bindgen_prelude::Result<Self> {
+        awl::ms::napi::bindgen_prelude::FromNapiRef::from_napi_ref(env, napi_val)
       }
     }
 
-    impl awl::napi::bindgen_prelude::FromNapiValue for &mut #name {
+    impl awl::ms::napi::bindgen_prelude::FromNapiValue for &mut #name {
       unsafe fn from_napi_value(
-        env: awl::napi::bindgen_prelude::sys::napi_env,
-        napi_val: awl::napi::bindgen_prelude::sys::napi_value
-      ) -> awl::napi::bindgen_prelude::Result<Self> {
-        awl::napi::bindgen_prelude::FromNapiMutRef::from_napi_mut_ref(env, napi_val)
+        env: awl::ms::napi::bindgen_prelude::sys::napi_env,
+        napi_val: awl::ms::napi::bindgen_prelude::sys::napi_value
+      ) -> awl::ms::napi::bindgen_prelude::Result<Self> {
+        awl::ms::napi::bindgen_prelude::FromNapiMutRef::from_napi_mut_ref(env, napi_val)
       }
     }
 
-    impl awl::napi::bindgen_prelude::ValidateNapiValue for &#name {
+    impl awl::ms::napi::bindgen_prelude::ValidateNapiValue for &#name {
       #validate
     }
 
-    impl awl::napi::bindgen_prelude::ValidateNapiValue for &mut #name {
+    impl awl::ms::napi::bindgen_prelude::ValidateNapiValue for &mut #name {
       #validate
     }
 
-    impl awl::napi::NapiRaw for &#name {
-      unsafe fn raw(&self) -> awl::napi::sys::napi_value {
+    impl awl::ms::napi::NapiRaw for &#name {
+      unsafe fn raw(&self) -> awl::ms::napi::sys::napi_value {
         unreachable!()
       }
     }
 
-    impl awl::napi::NapiRaw for &mut #name {
-      unsafe fn raw(&self) -> awl::napi::sys::napi_value {
+    impl awl::ms::napi::NapiRaw for &mut #name {
+      unsafe fn raw(&self) -> awl::ms::napi::sys::napi_value {
         unreachable!()
       }
     }
@@ -226,9 +226,9 @@ impl NapiStruct {
       let ty = &field.ty;
       match &field.name {
         syn::Member::Named(ident) => fields
-          .push(quote! { #ident: <#ty as awl::napi::bindgen_prelude::FromNapiValue>::from_napi_value(env, cb.get_arg(#i))? }),
+          .push(quote! { #ident: <#ty as awl::ms::napi::bindgen_prelude::FromNapiValue>::from_napi_value(env, cb.get_arg(#i))? }),
         syn::Member::Unnamed(_) => {
-          fields.push(quote! { <#ty as awl::napi::bindgen_prelude::FromNapiValue>::from_napi_value(env, cb.get_arg(#i))? });
+          fields.push(quote! { <#ty as awl::ms::napi::bindgen_prelude::FromNapiValue>::from_napi_value(env, cb.get_arg(#i))? });
         }
       }
     }
@@ -247,14 +247,14 @@ impl NapiStruct {
 
     quote! {
       extern "C" fn constructor(
-        env: awl::napi::bindgen_prelude::sys::napi_env,
-        cb: awl::napi::bindgen_prelude::sys::napi_callback_info
-      ) -> awl::napi::bindgen_prelude::sys::napi_value {
-        awl::napi::bindgen_prelude::CallbackInfo::<#fields_len>::new(env, cb, None)
+        env: awl::ms::napi::bindgen_prelude::sys::napi_env,
+        cb: awl::ms::napi::bindgen_prelude::sys::napi_callback_info
+      ) -> awl::ms::napi::bindgen_prelude::sys::napi_value {
+        awl::ms::napi::bindgen_prelude::CallbackInfo::<#fields_len>::new(env, cb, None)
           .and_then(|cb| #constructor)
           .unwrap_or_else(|e| {
-            unsafe { awl::napi::bindgen_prelude::JsError::from(e).throw_into(env) };
-            std::ptr::null_mut::<awl::napi::bindgen_prelude::sys::napi_value__>()
+            unsafe { awl::ms::napi::bindgen_prelude::JsError::from(e).throw_into(env) };
+            std::ptr::null_mut::<awl::ms::napi::bindgen_prelude::sys::napi_value__>()
           })
       }
     }
@@ -281,23 +281,23 @@ impl NapiStruct {
     let finalize_trait = if self.use_custom_finalize {
       quote! {}
     } else {
-      quote! { impl awl::napi::bindgen_prelude::ObjectFinalize for #name {} }
+      quote! { impl awl::ms::napi::bindgen_prelude::ObjectFinalize for #name {} }
     };
     let instance_of_impl = self.gen_instance_of_impl(name, &js_name_str);
     quote! {
-      impl awl::napi::bindgen_prelude::ToNapiValue for #name {
+      impl awl::ms::napi::bindgen_prelude::ToNapiValue for #name {
         unsafe fn to_napi_value(
-          env: awl::napi::sys::napi_env,
+          env: awl::ms::napi::sys::napi_env,
           val: #name
-        ) -> awl::napi::Result<awl::napi::bindgen_prelude::sys::napi_value> {
-          if let Some(ctor_ref) = awl::napi::__private::get_class_constructor(#js_name_str) {
+        ) -> awl::ms::napi::Result<awl::ms::napi::bindgen_prelude::sys::napi_value> {
+          if let Some(ctor_ref) = awl::ms::napi::__private::get_class_constructor(#js_name_str) {
             let wrapped_value = Box::into_raw(Box::new(val));
             let instance_value = #name::new_instance(env, wrapped_value as *mut std::ffi::c_void, ctor_ref)?;
             #iterator_implementation
             Ok(instance_value)
           } else {
-            Err(awl::napi::bindgen_prelude::Error::new(
-              awl::napi::bindgen_prelude::Status::InvalidArg, format!("Failed to get constructor of class `{}` in `ToNapiValue`", #js_name_raw))
+            Err(awl::ms::napi::bindgen_prelude::Error::new(
+              awl::ms::napi::bindgen_prelude::Status::InvalidArg, format!("Failed to get constructor of class `{}` in `ToNapiValue`", #js_name_raw))
             )
           }
         }
@@ -306,8 +306,8 @@ impl NapiStruct {
       #finalize_trait
       #instance_of_impl
       impl #name {
-        pub fn into_reference(val: #name, env: awl::napi::Env) -> awl::napi::Result<awl::napi::bindgen_prelude::Reference<#name>> {
-          if let Some(ctor_ref) = awl::napi::bindgen_prelude::get_class_constructor(#js_name_str) {
+        pub fn into_reference(val: #name, env: awl::ms::napi::Env) -> awl::ms::napi::Result<awl::ms::napi::bindgen_prelude::Reference<#name>> {
+          if let Some(ctor_ref) = awl::ms::napi::bindgen_prelude::get_class_constructor(#js_name_str) {
             unsafe {
               let wrapped_value = Box::into_raw(Box::new(val));
               let instance_value = #name::new_instance(env.raw(), wrapped_value as *mut std::ffi::c_void, ctor_ref)?;
@@ -315,47 +315,47 @@ impl NapiStruct {
                 let env = env.raw();
                 #iterator_implementation
               }
-              awl::napi::bindgen_prelude::Reference::<#name>::from_value_ptr(wrapped_value as *mut std::ffi::c_void, env.raw())
+              awl::ms::napi::bindgen_prelude::Reference::<#name>::from_value_ptr(wrapped_value as *mut std::ffi::c_void, env.raw())
             }
           } else {
-            Err(awl::napi::bindgen_prelude::Error::new(
-              awl::napi::bindgen_prelude::Status::InvalidArg, format!("Failed to get constructor of class `{}`", #js_name_raw))
+            Err(awl::ms::napi::bindgen_prelude::Error::new(
+              awl::ms::napi::bindgen_prelude::Status::InvalidArg, format!("Failed to get constructor of class `{}`", #js_name_raw))
             )
           }
         }
 
-        pub fn into_instance(self, env: awl::napi::Env) -> awl::napi::Result<awl::napi::bindgen_prelude::ClassInstance<#name>> {
-          if let Some(ctor_ref) = awl::napi::bindgen_prelude::get_class_constructor(#js_name_str) {
+        pub fn into_instance(self, env: awl::ms::napi::Env) -> awl::ms::napi::Result<awl::ms::napi::bindgen_prelude::ClassInstance<#name>> {
+          if let Some(ctor_ref) = awl::ms::napi::bindgen_prelude::get_class_constructor(#js_name_str) {
             unsafe {
               let wrapped_value = Box::leak(Box::new(self));
               let instance_value = #name::new_instance(env.raw(), wrapped_value as *mut _ as *mut std::ffi::c_void, ctor_ref)?;
 
-              Ok(awl::napi::bindgen_prelude::ClassInstance::<#name>::new(instance_value, wrapped_value))
+              Ok(awl::ms::napi::bindgen_prelude::ClassInstance::<#name>::new(instance_value, wrapped_value))
             }
           } else {
-            Err(awl::napi::bindgen_prelude::Error::new(
-              awl::napi::bindgen_prelude::Status::InvalidArg, format!("Failed to get constructor of class `{}`", #js_name_raw))
+            Err(awl::ms::napi::bindgen_prelude::Error::new(
+              awl::ms::napi::bindgen_prelude::Status::InvalidArg, format!("Failed to get constructor of class `{}`", #js_name_raw))
             )
           }
         }
 
         unsafe fn new_instance(
-          env: awl::napi::sys::napi_env,
+          env: awl::ms::napi::sys::napi_env,
           wrapped_value: *mut std::ffi::c_void,
-          ctor_ref: awl::napi::sys::napi_ref,
-        ) -> awl::napi::Result<awl::napi::bindgen_prelude::sys::napi_value> {
+          ctor_ref: awl::ms::napi::sys::napi_ref,
+        ) -> awl::ms::napi::Result<awl::ms::napi::bindgen_prelude::sys::napi_value> {
           let mut ctor = std::ptr::null_mut();
-          awl::napi::check_status!(
-            awl::napi::sys::napi_get_reference_value(env, ctor_ref, &mut ctor),
+          awl::ms::napi::check_status!(
+            awl::ms::napi::sys::napi_get_reference_value(env, ctor_ref, &mut ctor),
             "Failed to get constructor reference of class `{}`",
             #js_name_raw
           )?;
 
           let mut result = std::ptr::null_mut();
-          let inner = awl::napi::__private::___CALL_FROM_FACTORY.get_or_default();
+          let inner = awl::ms::napi::__private::___CALL_FROM_FACTORY.get_or_default();
           inner.store(true, std::sync::atomic::Ordering::Relaxed);
-          awl::napi::check_status!(
-            awl::napi::sys::napi_new_instance(env, ctor, 0, std::ptr::null_mut(), &mut result),
+          awl::ms::napi::check_status!(
+            awl::ms::napi::sys::napi_new_instance(env, ctor, 0, std::ptr::null_mut(), &mut result),
             "Failed to construct class `{}`",
             #js_name_raw
           )?;
@@ -363,19 +363,19 @@ impl NapiStruct {
           let mut object_ref = std::ptr::null_mut();
           let initial_finalize: Box<dyn FnOnce()> = Box::new(|| {});
           let finalize_callbacks_ptr = std::rc::Rc::into_raw(std::rc::Rc::new(std::cell::Cell::new(Box::into_raw(initial_finalize))));
-          awl::napi::check_status!(
-            awl::napi::sys::napi_wrap(
+          awl::ms::napi::check_status!(
+            awl::ms::napi::sys::napi_wrap(
               env,
               result,
               wrapped_value,
-              Some(awl::napi::bindgen_prelude::raw_finalize_unchecked::<#name>),
+              Some(awl::ms::napi::bindgen_prelude::raw_finalize_unchecked::<#name>),
               std::ptr::null_mut(),
               &mut object_ref,
             ),
             "Failed to wrap native object of class `{}`",
             #js_name_raw
           )?;
-          awl::napi::bindgen_prelude::Reference::<#name>::add_ref(env, wrapped_value, (wrapped_value, object_ref, finalize_callbacks_ptr));
+          awl::ms::napi::bindgen_prelude::Reference::<#name>::add_ref(env, wrapped_value, (wrapped_value, object_ref, finalize_callbacks_ptr));
           Ok(result)
         }
       }
@@ -387,7 +387,7 @@ impl NapiStruct {
       return quote! {};
     }
     quote! {
-      awl::napi::__private::create_iterator::<#name>(env, instance_value, wrapped_value);
+      awl::ms::napi::__private::create_iterator::<#name>(env, instance_value, wrapped_value);
     }
   }
 
@@ -409,13 +409,13 @@ impl NapiStruct {
           let alias_ident = format_ident!("{}_", ident);
           field_destructions.push(quote! { #ident: #alias_ident });
           field_conversions.push(
-            quote! { <#ty as awl::napi::bindgen_prelude::ToNapiValue>::to_napi_value(env, #alias_ident)? },
+            quote! { <#ty as awl::ms::napi::bindgen_prelude::ToNapiValue>::to_napi_value(env, #alias_ident)? },
           );
         }
         syn::Member::Unnamed(i) => {
           field_destructions.push(quote! { arg #i });
           field_conversions.push(
-            quote! { <#ty as awl::napi::bindgen_prelude::ToNapiValue>::to_napi_value(env, arg #i)? },
+            quote! { <#ty as awl::ms::napi::bindgen_prelude::ToNapiValue>::to_napi_value(env, arg #i)? },
           );
         }
       }
@@ -434,20 +434,20 @@ impl NapiStruct {
     let finalize_trait = if self.use_custom_finalize {
       quote! {}
     } else {
-      quote! { impl awl::napi::bindgen_prelude::ObjectFinalize for #name {} }
+      quote! { impl awl::ms::napi::bindgen_prelude::ObjectFinalize for #name {} }
     };
 
     quote! {
-      impl awl::napi::bindgen_prelude::ToNapiValue for #name {
+      impl awl::ms::napi::bindgen_prelude::ToNapiValue for #name {
         unsafe fn to_napi_value(
-          env: awl::napi::bindgen_prelude::sys::napi_env,
+          env: awl::ms::napi::bindgen_prelude::sys::napi_env,
           val: #name,
-        ) -> awl::napi::bindgen_prelude::Result<awl::napi::bindgen_prelude::sys::napi_value> {
-          if let Some(ctor_ref) = awl::napi::bindgen_prelude::get_class_constructor(#js_name_str) {
+        ) -> awl::ms::napi::bindgen_prelude::Result<awl::ms::napi::bindgen_prelude::sys::napi_value> {
+          if let Some(ctor_ref) = awl::ms::napi::bindgen_prelude::get_class_constructor(#js_name_str) {
             let mut ctor = std::ptr::null_mut();
 
-            awl::napi::bindgen_prelude::check_status!(
-              awl::napi::bindgen_prelude::sys::napi_get_reference_value(env, ctor_ref, &mut ctor),
+            awl::ms::napi::bindgen_prelude::check_status!(
+              awl::ms::napi::bindgen_prelude::sys::napi_get_reference_value(env, ctor_ref, &mut ctor),
               "Failed to get constructor reference of class `{}`",
               #js_name_without_null
             )?;
@@ -456,16 +456,16 @@ impl NapiStruct {
             let #destructed_fields = val;
             let args = vec![#(#field_conversions),*];
 
-            awl::napi::bindgen_prelude::check_status!(
-              awl::napi::bindgen_prelude::sys::napi_new_instance(env, ctor, args.len(), args.as_ptr(), &mut instance_value),
+            awl::ms::napi::bindgen_prelude::check_status!(
+              awl::ms::napi::bindgen_prelude::sys::napi_new_instance(env, ctor, args.len(), args.as_ptr(), &mut instance_value),
               "Failed to construct class `{}`",
               #js_name_without_null
             )?;
 
             Ok(instance_value)
           } else {
-            Err(awl::napi::bindgen_prelude::Error::new(
-              awl::napi::bindgen_prelude::Status::InvalidArg, format!("Failed to get constructor of class `{}`", #js_name_str))
+            Err(awl::ms::napi::bindgen_prelude::Error::new(
+              awl::ms::napi::bindgen_prelude::Status::InvalidArg, format!("Failed to get constructor of class `{}`", #js_name_str))
             )
           }
         }
@@ -516,8 +516,8 @@ impl NapiStruct {
             obj_field_getters.push(quote! { let #alias_ident: #ty = obj.get(#field_js_name)?; });
           } else {
             obj_field_getters.push(quote! {
-              let #alias_ident: #ty = obj.get(#field_js_name)?.ok_or_else(|| awl::napi::bindgen_prelude::Error::new(
-                awl::napi::bindgen_prelude::Status::InvalidArg,
+              let #alias_ident: #ty = obj.get(#field_js_name)?.ok_or_else(|| awl::ms::napi::bindgen_prelude::Error::new(
+                awl::ms::napi::bindgen_prelude::Status::InvalidArg,
                 format!("Missing field `{}`", #field_js_name),
               ))?;
             });
@@ -538,8 +538,8 @@ impl NapiStruct {
             obj_field_getters.push(quote! { let arg #i: #ty = obj.get(#field_js_name)?; });
           } else {
             obj_field_getters.push(quote! {
-              let arg #i: #ty = obj.get(#field_js_name)?.ok_or_else(|| awl::napi::bindgen_prelude::Error::new(
-                awl::napi::bindgen_prelude::Status::InvalidArg,
+              let arg #i: #ty = obj.get(#field_js_name)?.ok_or_else(|| awl::ms::napi::bindgen_prelude::Error::new(
+                awl::ms::napi::bindgen_prelude::Status::InvalidArg,
                 format!("Missing field `{}`", #field_js_name),
               ))?;
             });
@@ -559,35 +559,35 @@ impl NapiStruct {
     };
 
     quote! {
-      impl awl::napi::bindgen_prelude::TypeName for #name {
+      impl awl::ms::napi::bindgen_prelude::TypeName for #name {
         fn type_name() -> &'static str {
           #name_str
         }
 
-        fn value_type() -> awl::napi::ValueType {
-          awl::napi::ValueType::Object
+        fn value_type() -> awl::ms::napi::ValueType {
+          awl::ms::napi::ValueType::Object
         }
       }
 
-      impl awl::napi::bindgen_prelude::ToNapiValue for #name {
-        unsafe fn to_napi_value(env: awl::napi::bindgen_prelude::sys::napi_env, val: #name) -> awl::napi::bindgen_prelude::Result<awl::napi::bindgen_prelude::sys::napi_value> {
-          let env_wrapper = awl::napi::bindgen_prelude::Env::from(env);
+      impl awl::ms::napi::bindgen_prelude::ToNapiValue for #name {
+        unsafe fn to_napi_value(env: awl::ms::napi::bindgen_prelude::sys::napi_env, val: #name) -> awl::ms::napi::bindgen_prelude::Result<awl::ms::napi::bindgen_prelude::sys::napi_value> {
+          let env_wrapper = awl::ms::napi::bindgen_prelude::Env::from(env);
           let mut obj = env_wrapper.create_object()?;
 
           let #destructed_fields = val;
           #(#obj_field_setters)*
 
-          awl::napi::bindgen_prelude::Object::to_napi_value(env, obj)
+          awl::ms::napi::bindgen_prelude::Object::to_napi_value(env, obj)
         }
       }
 
-      impl awl::napi::bindgen_prelude::FromNapiValue for #name {
+      impl awl::ms::napi::bindgen_prelude::FromNapiValue for #name {
         unsafe fn from_napi_value(
-          env: awl::napi::bindgen_prelude::sys::napi_env,
-          napi_val: awl::napi::bindgen_prelude::sys::napi_value
-        ) -> awl::napi::bindgen_prelude::Result<Self> {
-          let env_wrapper = awl::napi::bindgen_prelude::Env::from(env);
-          let mut obj = awl::napi::bindgen_prelude::Object::from_napi_value(env, napi_val)?;
+          env: awl::ms::napi::bindgen_prelude::sys::napi_env,
+          napi_val: awl::ms::napi::bindgen_prelude::sys::napi_value
+        ) -> awl::ms::napi::bindgen_prelude::Result<Self> {
+          let env_wrapper = awl::ms::napi::bindgen_prelude::Env::from(env);
+          let mut obj = awl::ms::napi::bindgen_prelude::Object::from_napi_value(env, napi_val)?;
 
           #(#obj_field_getters)*
 
@@ -597,7 +597,7 @@ impl NapiStruct {
         }
       }
 
-      impl awl::napi::bindgen_prelude::ValidateNapiValue for #name {}
+      impl awl::ms::napi::bindgen_prelude::ValidateNapiValue for #name {}
     }
   }
 
@@ -619,7 +619,7 @@ impl NapiStruct {
       if field.getter {
         let default_to_napi_value_convert = quote! {
           let val = obj.#field_ident.to_owned();
-          unsafe { <#ty as awl::napi::bindgen_prelude::ToNapiValue>::to_napi_value(env, val) }
+          unsafe { <#ty as awl::ms::napi::bindgen_prelude::ToNapiValue>::to_napi_value(env, val) }
         };
         let to_napi_value_convert = if let syn::Type::Path(syn::TypePath {
           path: syn::Path { segments, .. },
@@ -630,7 +630,7 @@ impl NapiStruct {
             if TYPED_ARRAY_TYPE.iter().any(|name| ident == name) || ident == "Buffer" {
               quote! {
                 let val = &mut obj.#field_ident;
-                unsafe { <&mut #ty as awl::napi::bindgen_prelude::ToNapiValue>::to_napi_value(env, val) }
+                unsafe { <&mut #ty as awl::ms::napi::bindgen_prelude::ToNapiValue>::to_napi_value(env, val) }
               }
             } else {
               default_to_napi_value_convert
@@ -645,17 +645,17 @@ impl NapiStruct {
           field.js_name.clone(),
           quote! {
             extern "C" fn #getter_name(
-              env: awl::napi::bindgen_prelude::sys::napi_env,
-              cb: awl::napi::bindgen_prelude::sys::napi_callback_info
-            ) -> awl::napi::bindgen_prelude::sys::napi_value {
-              awl::napi::bindgen_prelude::CallbackInfo::<0>::new(env, cb, Some(0))
+              env: awl::ms::napi::bindgen_prelude::sys::napi_env,
+              cb: awl::ms::napi::bindgen_prelude::sys::napi_callback_info
+            ) -> awl::ms::napi::bindgen_prelude::sys::napi_value {
+              awl::ms::napi::bindgen_prelude::CallbackInfo::<0>::new(env, cb, Some(0))
                 .and_then(|mut cb| unsafe { cb.unwrap_borrow_mut::<#struct_name>() })
                 .and_then(|obj| {
                   #to_napi_value_convert
                 })
                 .unwrap_or_else(|e| {
-                  unsafe { awl::napi::bindgen_prelude::JsError::from(e).throw_into(env) };
-                  std::ptr::null_mut::<awl::napi::bindgen_prelude::sys::napi_value__>()
+                  unsafe { awl::ms::napi::bindgen_prelude::JsError::from(e).throw_into(env) };
+                  std::ptr::null_mut::<awl::ms::napi::bindgen_prelude::sys::napi_value__>()
                 })
             }
           },
@@ -667,23 +667,23 @@ impl NapiStruct {
           field.js_name.clone(),
           quote! {
             extern "C" fn #setter_name(
-              env: awl::napi::bindgen_prelude::sys::napi_env,
-              cb: awl::napi::bindgen_prelude::sys::napi_callback_info
-            ) -> awl::napi::bindgen_prelude::sys::napi_value {
-              awl::napi::bindgen_prelude::CallbackInfo::<1>::new(env, cb, Some(1))
+              env: awl::ms::napi::bindgen_prelude::sys::napi_env,
+              cb: awl::ms::napi::bindgen_prelude::sys::napi_callback_info
+            ) -> awl::ms::napi::bindgen_prelude::sys::napi_value {
+              awl::ms::napi::bindgen_prelude::CallbackInfo::<1>::new(env, cb, Some(1))
                 .and_then(|mut cb_info| unsafe {
                   cb_info.unwrap_borrow_mut::<#struct_name>()
                     .and_then(|obj| {
-                      <#ty as awl::napi::bindgen_prelude::FromNapiValue>::from_napi_value(env, cb_info.get_arg(0))
+                      <#ty as awl::ms::napi::bindgen_prelude::FromNapiValue>::from_napi_value(env, cb_info.get_arg(0))
                         .and_then(move |val| {
                           obj.#field_ident = val;
-                          <() as awl::napi::bindgen_prelude::ToNapiValue>::to_napi_value(env, ())
+                          <() as awl::ms::napi::bindgen_prelude::ToNapiValue>::to_napi_value(env, ())
                         })
                     })
                 })
                 .unwrap_or_else(|e| {
-                  unsafe { awl::napi::bindgen_prelude::JsError::from(e).throw_into(env) };
-                  std::ptr::null_mut::<awl::napi::bindgen_prelude::sys::napi_value__>()
+                  unsafe { awl::ms::napi::bindgen_prelude::JsError::from(e).throw_into(env) };
+                  std::ptr::null_mut::<awl::ms::napi::bindgen_prelude::sys::napi_value__>()
                 })
             }
           },
@@ -701,7 +701,7 @@ impl NapiStruct {
     let mut props = vec![];
 
     if self.kind == NapiStructKind::Constructor {
-      props.push(quote! { awl::napi::bindgen_prelude::Property::new("constructor").unwrap().with_ctor(constructor) });
+      props.push(quote! { awl::ms::napi::bindgen_prelude::Property::new("constructor").unwrap().with_ctor(constructor) });
     }
 
     for field in self.fields.iter() {
@@ -727,9 +727,9 @@ impl NapiStruct {
       }
 
       let mut prop = quote! {
-        awl::napi::bindgen_prelude::Property::new(#js_name)
+        awl::ms::napi::bindgen_prelude::Property::new(#js_name)
           .unwrap()
-          .with_property_attributes(awl::napi::bindgen_prelude::PropertyAttributes::from_bits(#attribute).unwrap())
+          .with_property_attributes(awl::ms::napi::bindgen_prelude::PropertyAttributes::from_bits(#attribute).unwrap())
       };
 
       if field.getter {
@@ -749,9 +749,9 @@ impl NapiStruct {
       #[allow(non_snake_case)]
       #[allow(clippy::all)]
       #[cfg(all(not(test), not(feature = "noop")))]
-      #[awl::napi::bindgen_prelude::ctor]
+      #[awl::ms::napi::bindgen_prelude::ctor]
       fn #struct_register_name() {
-        awl::napi::__private::register_class(#name_str, #js_mod_ident, #js_name, vec![#(#props),*]);
+        awl::ms::napi::__private::register_class(#name_str, #js_mod_ident, #js_name, vec![#(#props),*]);
       }
     }
   }
@@ -759,23 +759,23 @@ impl NapiStruct {
   fn gen_instance_of_impl(&self, name: &Ident, js_name: &str) -> TokenStream {
     quote! {
       impl #name {
-        pub fn instance_of<V: awl::napi::NapiRaw>(env: awl::napi::Env, value: V) -> awl::napi::Result<bool> {
-          if let Some(ctor_ref) = awl::napi::bindgen_prelude::get_class_constructor(#js_name) {
+        pub fn instance_of<V: awl::ms::napi::NapiRaw>(env: awl::ms::napi::Env, value: V) -> awl::ms::napi::Result<bool> {
+          if let Some(ctor_ref) = awl::ms::napi::bindgen_prelude::get_class_constructor(#js_name) {
             let mut ctor = std::ptr::null_mut();
-            awl::napi::check_status!(
-              unsafe { awl::napi::sys::napi_get_reference_value(env.raw(), ctor_ref, &mut ctor) },
+            awl::ms::napi::check_status!(
+              unsafe { awl::ms::napi::sys::napi_get_reference_value(env.raw(), ctor_ref, &mut ctor) },
               "Failed to get constructor reference of class `{}`",
               #js_name
             )?;
             let mut is_instance_of = false;
-            awl::napi::check_status!(
-              unsafe { awl::napi::sys::napi_instanceof(env.raw(), value.raw(), ctor, &mut is_instance_of) },
+            awl::ms::napi::check_status!(
+              unsafe { awl::ms::napi::sys::napi_instanceof(env.raw(), value.raw(), ctor, &mut is_instance_of) },
               "Failed to run instanceof for class `{}`",
               #js_name
             )?;
             Ok(is_instance_of)
           } else {
-            Err(awl::napi::Error::new(awl::napi::Status::GenericFailure, format!("Failed to get constructor of class `{}`", #js_name)))
+            Err(awl::ms::napi::Error::new(awl::ms::napi::Status::GenericFailure, format!("Failed to get constructor of class `{}`", #js_name)))
           }
         }
       }
@@ -828,7 +828,7 @@ impl NapiImpl {
 
       let prop = props.entry(&item.js_name).or_insert_with(|| {
         quote! {
-          awl::napi::bindgen_prelude::Property::new(#js_name).unwrap().with_property_attributes(awl::napi::bindgen_prelude::PropertyAttributes::from_bits(#attribute).unwrap())
+          awl::ms::napi::bindgen_prelude::Property::new(#js_name).unwrap().with_property_attributes(awl::ms::napi::bindgen_prelude::PropertyAttributes::from_bits(#attribute).unwrap())
         }
       });
 
@@ -840,7 +840,7 @@ impl NapiImpl {
           if item.fn_self.is_some() {
             quote! { .with_method(#intermediate_name) }
           } else {
-            quote! { .with_method(#intermediate_name).with_property_attributes(awl::napi::bindgen_prelude::PropertyAttributes::Static) }
+            quote! { .with_method(#intermediate_name).with_property_attributes(awl::ms::napi::bindgen_prelude::PropertyAttributes::Static) }
           }
         }
       };
@@ -860,9 +860,9 @@ impl NapiImpl {
         #(#methods)*
 
         #[cfg(all(not(test), not(feature = "noop")))]
-        #[awl::napi::bindgen_prelude::ctor]
+        #[awl::ms::napi::bindgen_prelude::ctor]
         fn #register_name() {
-          awl::napi::__private::register_class(#name_str, #js_mod_ident, #js_name, vec![#(#props),*]);
+          awl::ms::napi::__private::register_class(#name_str, #js_mod_ident, #js_name, vec![#(#props),*]);
         }
       }
     })

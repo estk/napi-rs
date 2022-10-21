@@ -33,15 +33,15 @@ impl NapiConst {
     quote! {
       #[allow(non_snake_case)]
       #[allow(clippy::all)]
-      unsafe fn #cb_name(env: awl::napi::sys::napi_env) -> awl::napi::Result<awl::napi::sys::napi_value> {
-        <#type_name as awl::napi::bindgen_prelude::ToNapiValue>::to_napi_value(env, #name_ident)
+      unsafe fn #cb_name(env: awl::ms::napi::sys::napi_env) -> awl::ms::napi::Result<awl::ms::napi::sys::napi_value> {
+        <#type_name as awl::ms::napi::bindgen_prelude::ToNapiValue>::to_napi_value(env, #name_ident)
       }
       #[allow(non_snake_case)]
       #[allow(clippy::all)]
       #[cfg(all(not(test), not(feature = "noop")))]
-      #[awl::napi::bindgen_prelude::ctor]
+      #[awl::ms::napi::bindgen_prelude::ctor]
       fn #register_name() {
-        awl::napi::bindgen_prelude::register_module_export(#js_mod_ident, #js_name_lit, #cb_name);
+        awl::ms::napi::bindgen_prelude::register_module_export(#js_mod_ident, #js_name_lit, #cb_name);
       }
     }
   }

@@ -21,7 +21,7 @@ impl TryToTokens for NapiFn {
 
     let native_call = if !self.is_async {
       quote! {
-        awl::napi::bindgen_prelude::within_runtime_if_available(move || {
+        awl::ms::napi::bindgen_prelude::within_runtime_if_available(move || {
           let #receiver_ret_name = {
             #receiver(#(#arg_names),*)
           };
@@ -35,7 +35,7 @@ impl TryToTokens for NapiFn {
         quote! { Ok(#receiver(#(#arg_names),*).await) }
       };
       quote! {
-        awl::napi::bindgen_prelude::execute_tokio_future(env, async move { #call }, |env, #receiver_ret_name| {
+        awl::ms::napi::bindgen_prelude::execute_tokio_future(env, async move { #call }, |env, #receiver_ret_name| {
           #ret
         })
       }
@@ -51,18 +51,18 @@ impl TryToTokens for NapiFn {
       quote! {
         // constructor function is called from class `factory`
         // so we should skip the original `constructor` logic
-        let inner = awl::napi::__private::___CALL_FROM_FACTORY.get_or_default();
+        let inner = awl::ms::napi::__private::___CALL_FROM_FACTORY.get_or_default();
         if inner.load(std::sync::atomic::Ordering::Relaxed) {
           return std::ptr::null_mut();
         }
-        awl::napi::bindgen_prelude::CallbackInfo::<#args_len>::new(env, cb, None).and_then(|mut cb| {
+        awl::ms::napi::bindgen_prelude::CallbackInfo::<#args_len>::new(env, cb, None).and_then(|mut cb| {
           #(#arg_conversions)*
           #native_call
         })
       }
     } else {
       quote! {
-        awl::napi::bindgen_prelude::CallbackInfo::<#args_len>::new(env, cb, None).and_then(|mut cb| {
+        awl::ms::napi::bindgen_prelude::CallbackInfo::<#args_len>::new(env, cb, None).and_then(|mut cb| {
           #(#arg_conversions)*
           #native_call
         })
@@ -73,7 +73,7 @@ impl TryToTokens for NapiFn {
       quote! {
         {
           std::panic::catch_unwind(|| { #function_call })
-            .map_err(|e| awl::napi::Error::new(awl::napi::Status::GenericFailure, format!("{:?}", e)))
+            .map_err(|e| awl::ms::napi::Error::new(awl::ms::napi::Status::GenericFailure, format!("{:?}", e)))
             .and_then(|r| r)
         }
       }
@@ -89,13 +89,13 @@ impl TryToTokens for NapiFn {
       #[allow(non_snake_case)]
       #[allow(clippy::all)]
       extern "C" fn #intermediate_ident(
-        env: awl::napi::bindgen_prelude::sys::napi_env,
-        cb: awl::napi::bindgen_prelude::sys::napi_callback_info
-      ) -> awl::napi::bindgen_prelude::sys::napi_value {
+        env: awl::ms::napi::bindgen_prelude::sys::napi_env,
+        cb: awl::ms::napi::bindgen_prelude::sys::napi_callback_info
+      ) -> awl::ms::napi::bindgen_prelude::sys::napi_value {
         unsafe {
           #function_call.unwrap_or_else(|e| {
-            awl::napi::bindgen_prelude::JsError::from(e).throw_into(env);
-            std::ptr::null_mut::<awl::napi::bindgen_prelude::sys::napi_value__>()
+            awl::ms::napi::bindgen_prelude::JsError::from(e).throw_into(env);
+            std::ptr::null_mut::<awl::ms::napi::bindgen_prelude::sys::napi_value__>()
           })
         }
       }
@@ -140,7 +140,7 @@ impl NapiFn {
       match &arg.kind {
         NapiFnArgKind::PatType(path) => {
           if &path.ty.to_token_stream().to_string() == "Env" {
-            args.push(quote! { awl::napi::bindgen_prelude::Env::from(env) });
+            args.push(quote! { awl::ms::napi::bindgen_prelude::Env::from(env) });
             skipped_arg_count += 1;
           } else {
             let is_in_class = self.parent.is_some();
@@ -161,7 +161,7 @@ impl NapiFn {
                       if let Some(p) = path.path.segments.first() {
                         if p.ident == *self.parent.as_ref().unwrap() {
                           args.push(
-                            quote! { awl::napi::bindgen_prelude::Reference::from_value_ptr(this_ptr as *mut std::ffi::c_void, env)? },
+                            quote! { awl::ms::napi::bindgen_prelude::Reference::from_value_ptr(this_ptr as *mut std::ffi::c_void, env)? },
                           );
                           skipped_arg_count += 1;
                           continue;
@@ -196,7 +196,7 @@ impl NapiFn {
                           args.push(
                             quote! {
                               {
-                                <#ident as awl::napi::bindgen_prelude::FromNapiValue>::from_napi_value(env, cb.this)?
+                                <#ident as awl::ms::napi::bindgen_prelude::FromNapiValue>::from_napi_value(env, cb.this)?
                               }
                             },
                           );
@@ -216,9 +216,9 @@ impl NapiFn {
                         {
                           if let Some(syn::PathSegment { ident, .. }) = segments.first() {
                             let token = if mutability.is_some() {
-                              quote! { <#ident as awl::napi::bindgen_prelude::FromNapiMutRef>::from_napi_mut_ref(env, cb.this)? }
+                              quote! { <#ident as awl::ms::napi::bindgen_prelude::FromNapiMutRef>::from_napi_mut_ref(env, cb.this)? }
                             } else {
-                              quote! { <#ident as awl::napi::bindgen_prelude::FromNapiRef>::from_napi_ref(env, cb.this)? }
+                              quote! { <#ident as awl::ms::napi::bindgen_prelude::FromNapiRef>::from_napi_ref(env, cb.this)? }
                             };
                             args.push(token);
                             skipped_arg_count += 1;
@@ -229,7 +229,7 @@ impl NapiFn {
                     }
                   }
                   args.push(
-                    quote! { <awl::napi::bindgen_prelude::This as awl::napi::NapiValue>::from_raw_unchecked(env, cb.this) },
+                    quote! { <awl::ms::napi::bindgen_prelude::This as awl::ms::napi::NapiValue>::from_raw_unchecked(env, cb.this) },
                   );
                   skipped_arg_count += 1;
                   continue;
@@ -260,7 +260,7 @@ impl NapiFn {
 
     let type_check = if self.return_if_invalid {
       quote! {
-        if let Ok(maybe_promise) = <#ty as awl::napi::bindgen_prelude::ValidateNapiValue>::validate(env, cb.get_arg(#index)) {
+        if let Ok(maybe_promise) = <#ty as awl::ms::napi::bindgen_prelude::ValidateNapiValue>::validate(env, cb.get_arg(#index)) {
           if !maybe_promise.is_null() {
             return Ok(maybe_promise);
           }
@@ -270,7 +270,7 @@ impl NapiFn {
       }
     } else if self.strict {
       quote! {
-        let maybe_promise = <#ty as awl::napi::bindgen_prelude::ValidateNapiValue>::validate(env, cb.get_arg(#index))?;
+        let maybe_promise = <#ty as awl::ms::napi::bindgen_prelude::ValidateNapiValue>::validate(env, cb.get_arg(#index))?;
         if !maybe_promise.is_null() {
           return Ok(maybe_promise);
         }
@@ -288,7 +288,7 @@ impl NapiFn {
         quote! {
           let #arg_name = {
             #type_check
-            <#elem as awl::napi::bindgen_prelude::FromNapiMutRef>::from_napi_mut_ref(env, cb.get_arg(#index))?
+            <#elem as awl::ms::napi::bindgen_prelude::FromNapiMutRef>::from_napi_mut_ref(env, cb.get_arg(#index))?
           };
         }
       }
@@ -296,7 +296,7 @@ impl NapiFn {
         quote! {
           let #arg_name = {
             #type_check
-            <#elem as awl::napi::bindgen_prelude::FromNapiRef>::from_napi_ref(env, cb.get_arg(#index))?
+            <#elem as awl::ms::napi::bindgen_prelude::FromNapiRef>::from_napi_ref(env, cb.get_arg(#index))?
           };
         }
       }
@@ -304,7 +304,7 @@ impl NapiFn {
         quote! {
           let #arg_name = {
             #type_check
-            <#ty as awl::napi::bindgen_prelude::FromNapiValue>::from_napi_value(env, cb.get_arg(#index))?
+            <#ty as awl::ms::napi::bindgen_prelude::FromNapiValue>::from_napi_value(env, cb.get_arg(#index))?
           };
         }
       }
@@ -319,14 +319,14 @@ impl NapiFn {
       let cb_arg_ident = Ident::new(&format!("callback_arg_{}", i), Span::call_site());
       inputs.push(quote! { #cb_arg_ident: #ty });
       arg_conversions.push(
-        quote! { <#ty as awl::napi::bindgen_prelude::ToNapiValue>::to_napi_value(env, #cb_arg_ident)? },
+        quote! { <#ty as awl::ms::napi::bindgen_prelude::ToNapiValue>::to_napi_value(env, #cb_arg_ident)? },
       );
     }
 
     let ret = match &cb.ret {
       Some(ty) => {
         quote! {
-          let ret = <#ty as awl::napi::bindgen_prelude::FromNapiValue>::from_napi_value(env, ret_ptr)?;
+          let ret = <#ty as awl::ms::napi::bindgen_prelude::FromNapiValue>::from_napi_value(env, ret_ptr)?;
 
           Ok(ret)
         }
@@ -335,7 +335,7 @@ impl NapiFn {
     };
 
     quote! {
-      awl::napi::bindgen_prelude::assert_type_of!(env, cb.get_arg(#index), awl::napi::bindgen_prelude::ValueType::Function)?;
+      awl::ms::napi::bindgen_prelude::assert_type_of!(env, cb.get_arg(#index), awl::ms::napi::bindgen_prelude::ValueType::Function)?;
       let #arg_name = |#(#inputs),*| {
         let args = vec![
           #(#arg_conversions),*
@@ -343,9 +343,9 @@ impl NapiFn {
 
         let mut ret_ptr = std::ptr::null_mut();
 
-        awl::napi::bindgen_prelude::check_pending_exception!(
+        awl::ms::napi::bindgen_prelude::check_pending_exception!(
           env,
-          awl::napi::bindgen_prelude::sys::napi_call_function(
+          awl::ms::napi::bindgen_prelude::sys::napi_call_function(
             env,
             cb.this(),
             cb.get_arg(#index),
@@ -409,16 +409,16 @@ impl NapiFn {
       } else if self.is_ret_result {
         if self.is_async {
           quote! {
-            <#ty as awl::napi::bindgen_prelude::ToNapiValue>::to_napi_value(env, #ret)
+            <#ty as awl::ms::napi::bindgen_prelude::ToNapiValue>::to_napi_value(env, #ret)
           }
         } else if is_return_self {
           quote! { #ret.map(|_| cb.this) }
         } else {
           quote! {
             match #ret {
-              Ok(value) => awl::napi::bindgen_prelude::ToNapiValue::to_napi_value(env, value),
+              Ok(value) => awl::ms::napi::bindgen_prelude::ToNapiValue::to_napi_value(env, value),
               Err(err) => {
-                awl::napi::bindgen_prelude::JsError::from(err).throw_into(env);
+                awl::ms::napi::bindgen_prelude::JsError::from(err).throw_into(env);
                 Ok(std::ptr::null_mut())
               },
             }
@@ -428,12 +428,12 @@ impl NapiFn {
         quote! { Ok(cb.this) }
       } else {
         quote! {
-          <#ty as awl::napi::bindgen_prelude::ToNapiValue>::to_napi_value(env, #ret)
+          <#ty as awl::ms::napi::bindgen_prelude::ToNapiValue>::to_napi_value(env, #ret)
         }
       }
     } else {
       quote! {
-        <() as awl::napi::bindgen_prelude::ToNapiValue>::to_napi_value(env, ())
+        <() as awl::ms::napi::bindgen_prelude::ToNapiValue>::to_napi_value(env, ())
       }
     }
   }
@@ -452,11 +452,11 @@ impl NapiFn {
       quote! {
         #[allow(non_snake_case)]
         #[allow(clippy::all)]
-        unsafe fn #cb_name(env: awl::napi::bindgen_prelude::sys::napi_env) -> awl::napi::bindgen_prelude::Result<awl::napi::bindgen_prelude::sys::napi_value> {
+        unsafe fn #cb_name(env: awl::ms::napi::bindgen_prelude::sys::napi_env) -> awl::ms::napi::bindgen_prelude::Result<awl::ms::napi::bindgen_prelude::sys::napi_value> {
           let mut fn_ptr = std::ptr::null_mut();
 
-          awl::napi::bindgen_prelude::check_status!(
-            awl::napi::bindgen_prelude::sys::napi_create_function(
+          awl::ms::napi::bindgen_prelude::check_status!(
+            awl::ms::napi::bindgen_prelude::sys::napi_create_function(
               env,
               #js_name.as_ptr() as *const _,
               #name_len,
@@ -467,16 +467,16 @@ impl NapiFn {
             "Failed to register function `{}`",
             #name_str,
           )?;
-          awl::napi::bindgen_prelude::register_js_function(#js_name, #cb_name, Some(#intermediate_ident));
+          awl::ms::napi::bindgen_prelude::register_js_function(#js_name, #cb_name, Some(#intermediate_ident));
           Ok(fn_ptr)
         }
 
         #[allow(clippy::all)]
         #[allow(non_snake_case)]
         #[cfg(all(not(test), not(feature = "noop")))]
-        #[awl::napi::bindgen_prelude::ctor]
+        #[awl::ms::napi::bindgen_prelude::ctor]
         fn #module_register_name() {
-          awl::napi::bindgen_prelude::register_module_export(#js_mod_ident, #js_name, #cb_name);
+          awl::ms::napi::bindgen_prelude::register_module_export(#js_mod_ident, #js_name, #cb_name);
         }
       }
     }
