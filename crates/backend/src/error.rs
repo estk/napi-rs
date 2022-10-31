@@ -27,7 +27,7 @@ pub struct Diagnostic {
 pub type BindgenResult<T> = Result<T, Diagnostic>;
 
 #[derive(Debug)]
-enum Repr {
+pub enum Repr {
   Single {
     text: String,
     span: Option<(Span, Span)>,
@@ -39,6 +39,9 @@ enum Repr {
 }
 
 impl Diagnostic {
+  pub fn into_inner(self) -> Repr {
+    self.inner
+  }
   /// Generate a `Diagnostic` from an informational message with no Span
   pub fn error<T: Into<String>>(text: T) -> Diagnostic {
     Diagnostic {
