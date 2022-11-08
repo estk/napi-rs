@@ -90,6 +90,7 @@ impl NapiEnum {
           env: awl::ms::napi::bindgen_prelude::sys::napi_env,
           val: Self
         ) -> awl::ms::napi::bindgen_prelude::Result<awl::ms::napi::bindgen_prelude::sys::napi_value> {
+          use awl::ms::napi::bindgen_prelude::ToNapiValue;
           let val = match val {
             #(#to_napi_branches,)*
           };
