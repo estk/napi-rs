@@ -114,6 +114,7 @@ impl NapiEnum {
 
       define_properties.push(quote! {
         {
+          use awl::ms::napi::bindgen_prelude::ToNapiValue;
           let name = std::ffi::CStr::from_bytes_with_nul_unchecked(#name_lit.as_bytes());
           awl::ms::napi::bindgen_prelude::check_status!(
             awl::ms::napi::bindgen_prelude::sys::napi_set_named_property(env, obj_ptr, name.as_ptr(), i32::to_napi_value(env, #val_lit)?),
